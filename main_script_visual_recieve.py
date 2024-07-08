@@ -61,21 +61,23 @@ def show_image(path):
     cv2.destroyAllWindows()
 
 
-def generate_output_file(data1, frame, i, current_file):
+def generate_output_file(data1, frame, i, current_file, previous_data):
     # lets decode the qr code
     data1 = data1.data.decode("utf-8")
+    if data1==previous_data:
+        return current_file, data1
     # compare data1 with the start "file_format:"
     start_marker = "file_format:"
     end_marker = "end_of_file"
     if data1.startswith(start_marker):
         data1 = data1[len(start_marker):]
-        current_file = 'C:\\Users\\Public\\Documents\\top_secret\\' + data1
+        current_file = 'C:\\Users\\Public\\Doc\\top_secret\\' + data1
         with open(data1, 'wb') as file:
             pass
     elif not data1.startswith(end_marker):
         with open(current_file, 'ab') as file:
             file.write(data1)
-    return current_file
+    return current_file, data1
     # create a jpg file
     # open_in_notepad(txt_file_path)
 
@@ -119,6 +121,7 @@ def detect_red_hollow_rectangles(frame):
 
 def main():
     current_file2 = ""
+    previous_text = "boolbool"
     i =0
     camera = cv2.VideoCapture(1)  # Replace 0 with the appropriate camera index if necessary
     j=0
@@ -128,7 +131,11 @@ def main():
         frame = capture_frame(camera)
         # detect wqr
         org_frame = frame
-        data, bbox = detect_qr_code(frame)
+        try:
+            data, bbox = detect_qr_code(frame)
+        except Exception as e:
+            print("Error:", e)
+            continue
         print(f"bbox: {bbox}")
         if bbox is not None:
             rec = bbox[0]
@@ -151,7 +158,7 @@ def main():
         if data_matrix is not None:
             # print(data_matrix, bbox)
             j += 1
-            current_file2 = generate_output_file(data_matrix, frame, j, current_file2)
+            current_file2, previous_text = generate_output_file(data_matrix, frame, j, current_file2, previous_text)
             print("Data Matrix found in frame", i)
         else:
             # Data Matrix not detected, apply homography to the entire screen
