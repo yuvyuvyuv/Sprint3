@@ -32,11 +32,10 @@ def generate_qr_code(input_file, output_file):
     # Save QR code image to file
     qr_image.save(output_file)
 
-    print(f"QR code saved as {output_file}")
     return output_file
 
 if __name__ == "__main__":
-    input_file = "data_for_checks\check_hadar.txt"  # Replace with your binary file path
+    input_file = "data_for_checks\The Little Prince.txt"  # Replace with your binary file path
     output_file = input_file[:-3]+"png"  # Output QR code file name
 
-    generate_data_matrix(input_file, output_file)
+    generate_qr_code(input_file, output_file)
