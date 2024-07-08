@@ -5,7 +5,7 @@ from nltk.corpus import words
 import string
 import pickle
 
-from bytes_to_code import generate_qr_code
+from bytes_to_code import generate_qr_code, generate_qr_code_from_text
 
 DIR_PATH = "C:\\Users\\Public\\Documents\\top_secret"
 IMG_PATH = "C:\\Users\\Public\\Documents\\top_secret\\top_image.jpg"
@@ -126,20 +126,26 @@ def rank_files(file_names):
 
 def file_to_barcodes(file_path, file_number):
     file_path = os.path.join(DIR_PATH, file_path)
-    print(file_path)
     with open(file_path, 'r', encoding='utf-8') as file:
         text = file.read()
         # split text into chunks of 100 characters
+
+        chunks = []
         chunk_size = 100
-        chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+        for i in range(0, len(text), chunk_size):
+            chunk = text[i:i + chunk_size]
+            chunks.append(chunk)
+
+
         # generate QR codes for each chunk
         qr_codes = []
         start_barcode = generate_qr_code("data_for_checks\start_file.txt", "start_barcode.png")
         qr_codes.append(start_barcode)
         for i, chunk in enumerate(chunks):
             output_file = f"qr_code_{file_number}_{i}.png"
-            image_path = generate_qr_code(chunk, output_file)
-            image_path = generate_qr_code(chunk, output_file)
+            print(type(chunk))
+            print("chunk sent to generate qr code is "+chunk)
+            image_path = generate_qr_code_from_text(chunk, output_file)
 
             # convert data type to png
             qr_codes.append(image_path)
@@ -151,9 +157,11 @@ def file_to_barcodes(file_path, file_number):
 def all_files_to_barcodes(file_paths):
     all_qr_codes = []
     for i, file_path in enumerate(file_paths):
-        all_qr_codes.extend(file_to_barcodes(file_path[0], i))
+        print("file sent to file to barcode is "+file_path)
+        all_qr_codes.extend(file_to_barcodes(file_path, i))
     return all_qr_codes
 
 file_names = [file[0] for file in rank_files(list_files_in_directory()) if file[1].file_format == ".txt"]
 print(file_names)
 all_files_to_barcodes(file_names)
+
