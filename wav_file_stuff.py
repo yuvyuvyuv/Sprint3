@@ -2,6 +2,7 @@
 import numpy as np
 import wave
 import struct
+import pyaudio # for playing the wav file
 
 
 # TODO: update locations!!
@@ -46,6 +47,11 @@ def play_wav_file(wav_file_path):
     # close the file
     wave_file.close()
     # play the file
-    play_obj = sa.play_buffer(frames, 1, 2, 44100)
-    play_obj.wait_done()
+    play_obj = pyaudio.PyAudio().open(format=pyaudio.PyAudio().get_format_from_width(params[1]),
+                                        channels=params[0],
+                                        rate=params[2],
+                                        output=True)
+    play_obj.write(frames)
+    play_obj.stop_stream()
+    play_obj.close()
     return
