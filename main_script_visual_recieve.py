@@ -4,7 +4,7 @@
 
 import cv2
 import numpy as np
-from pylibdmtx.pylibdmtx import decode
+from pyzbar.pyzbar import decode as zbar_decode
 import subprocess
 import os
 
@@ -35,7 +35,7 @@ def apply_homography(image, src_points, dst_points):
 
 
 def detect_data_matrix(image):
-    data_matrices = decode(image)
+    data_matrices = zbar_decode(image)
     if data_matrices:
         return data_matrices[0]  # Return the first detected Data Matrix
     return None
@@ -66,9 +66,8 @@ def generate_output_file(data, image):
     return
 
 
-
 def main():
-    camera = cv2.VideoCapture(0)  # Replace 0 with the appropriate camera index if necessary
+    camera = cv2.VideoCapture(1)  # Replace 0 with the appropriate camera index if necessary
 
     while True:
         # Step 1: Capture a frame from the camera
@@ -79,33 +78,34 @@ def main():
 
         if data_matrix:
             # Data Matrix detected
-            points = data_matrix.rect
-            src_points = np.array([
-                [points[0][0], points[0][1]],
-                [points[1][0], points[1][1]],
-                [points[2][0], points[2][1]],
-                [points[3][0], points[3][1]]
-            ], dtype=np.float32)
+            points = data_matrix.polygon
+            if len(points) == 4:
+                src_points = np.array([
+                    [points[0].x, points[0].y],
+                    [points[1].x, points[1].y],
+                    [points[2].x, points[2].y],
+                    [points[3].x, points[3].y]
+                ], dtype=np.float32)
 
-            # Calculate width and height of the Data Matrix
-            width = int(
-                max(np.linalg.norm(src_points[0] - src_points[1]), np.linalg.norm(src_points[2] - src_points[3])))
-            height = int(
-                max(np.linalg.norm(src_points[0] - src_points[3]), np.linalg.norm(src_points[1] - src_points[2])))
+                # Calculate width and height of the Data Matrix
+                width = int(
+                    max(np.linalg.norm(src_points[0] - src_points[1]), np.linalg.norm(src_points[2] - src_points[3])))
+                height = int(
+                    max(np.linalg.norm(src_points[0] - src_points[3]), np.linalg.norm(src_points[1] - src_points[2])))
 
-            dst_points = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype=np.float32)
+                dst_points = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype=np.float32)
 
-            # Step 3: Apply homography to the Data Matrix
-            rectified_data_matrix_image = apply_homography(frame, src_points, dst_points)
+                # Step 3: Apply homography to the Data Matrix
+                rectified_data_matrix_image = apply_homography(frame, src_points, dst_points)
 
-            # Step 4: Decode the Data Matrix from the rectified image
-            decoded_data_matrix = detect_data_matrix(rectified_data_matrix_image)
-            if decoded_data_matrix:
-                data = decoded_data_matrix.data.decode('utf-8')
-                # Step 5: Generate output file
-                generate_output_file(data, rectified_data_matrix_image)
-            else:
-                print("Failed to decode the Data Matrix from the rectified image")
+                # Step 4: Decode the Data Matrix from the rectified image
+                decoded_data_matrix = detect_data_matrix(rectified_data_matrix_image)
+                if decoded_data_matrix:
+                    data = decoded_data_matrix.data.decode('utf-8')
+                    # Step 5: Generate output file
+                    generate_output_file(data, rectified_data_matrix_image)
+                else:
+                    print("Failed to decode the Data Matrix from the rectified image")
         else:
             # Data Matrix not detected, apply homography to the entire screen
             print("No Data Matrix detected in the current frame")
