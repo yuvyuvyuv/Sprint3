@@ -7,6 +7,8 @@ import numpy as np
 from pylibdmtx.pylibdmtx import decode
 import subprocess
 import os
+from PIL import Image
+
 
 # TODO: find actual resolution
 SCREEN_WIDTH = 1920  # Replace with actual screen width
@@ -36,9 +38,9 @@ def apply_homography(image, src_points, dst_points):
 
 def detect_data_matrix(image):
     # Convert the image to grayscale
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # Detect Data Matrix barcodes in the image
-    barcodes = decode(gray_image)
+    barcodes = decode(image)
     return barcodes[0] if barcodes else None
 
 
@@ -118,6 +120,7 @@ def main():
         # Step 1: Capture a frame from the camera
         frame = capture_frame(camera)
         # detect wqr
+        org_frame = frame
         data, bbox = detect_qr_code(frame)
         print(f"bbox: {bbox}")
         if bbox is not None:
@@ -134,7 +137,10 @@ def main():
             # rectified_data_matrix_image = apply_homography(frame, src_points, dst_points)
             # frame = rectified_data_matrix_image
         # Step 2: Detect the Data Matrix
-            data_matrix = detect_data_matrix(frame)
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            pil_image = Image.fromarray(frame_rgb)
+            data_matrix = detect_data_matrix(pil_image)
+            frame = pil_image
         if data_matrix is not None:
             # print(data_matrix, bbox)
             j += 1
@@ -145,7 +151,7 @@ def main():
             print("No Data Matrix detected in the current frame", i)
 
         # Display the captured frame
-        cv2.imshow('Video Stream', frame)
+        cv2.imshow('Video Stream', org_frame)
 
         # Break the loop on 'q' key press
         if cv2.waitKey(1) & 0xFF == ord('q'):
