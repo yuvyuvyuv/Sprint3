@@ -1,21 +1,29 @@
 # in this module i want to use a YXF-QQSJ-8807-125 camera to capture a
 # screen and use a homography in order to get a qr that is on the screen, that qr
 # will be decoded and the data will be used to generate a txt/jpg file
+
 import cv2
 import numpy as np
-from pyzbar.pyzbar import decode
+from pylibdmtx.pylibdmtx import decode
+import subprocess
+import os
 
 # TODO: find actual resolution
 SCREEN_WIDTH = 1920  # Replace with actual screen width
 SCREEN_HEIGHT = 1080  # Replace with actual screen height
 
 
-def capture_image():
-    camera = cv2.VideoCapture(0)  # Replace 0 with the appropriate camera index if necessary
+def open_in_notepad(file_path):
+    if os.path.exists(file_path):
+        subprocess.run(['notepad.exe', file_path])
+    else:
+        print(f"The file {file_path} does not exist")
+
+
+def capture_frame(camera):
     ret, frame = camera.read()
-    camera.release()
     if not ret:
-        raise ValueError("Failed to capture image")
+        raise ValueError("Failed to capture frame")
     return frame
 
 
@@ -26,63 +34,60 @@ def apply_homography(image, src_points, dst_points):
     return rectified_image
 
 
-def detect_qr_code(image):
-    qr_codes = decode(image)
-    if qr_codes:
-        return qr_codes[0]  # Return the first detected QR code
+def detect_data_matrix(image):
+    data_matrices = decode(image)
+    if data_matrices:
+        return data_matrices[0]  # Return the first detected Data Matrix
     return None
 
 
-def show_output_file(type):
-    # TODO: show output file!!
-    pass
+def show_image(path):
+    image = cv2.imread(path)
+    cv2.imshow('Image', image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 
-def generate_output_file(qr_data, image):
-    # TODO: depends on yubar's way of encoding!!!
-    type = -1
-    if qr_data.endswith('.txt'):
+def generate_output_file(data, image):
+    if data.endswith('.txt'):
         with open('output.txt', 'w') as file:
-            file.write(qr_data)
+            file.write(data)
         print("TXT file generated")
-        type = 0 # txt
-    elif qr_data.endswith('.jpg'):
+        # now output it to the screen
+        file_path = 'output.txt'
+        open_in_notepad(file_path)
+    elif data.endswith('.jpg'):
         cv2.imwrite('output.jpg', image)
         print("JPG file generated")
-        type = 1 # jpg
+        show_image('output.jpg')
     else:
         print("Unknown data format")
-    show_output_file(type)
+
     return
 
 
 
-def detect_screen_points():
-    # TODO: need to do automatically
-    print("Please click on the four corners of the screen in the following order:")
-    print("Top-left, Top-right, Bottom-right, Bottom-left")
-    # get from user
-    p1 = tuple(map(int, input("Top-left: ").split(',')))
-    p2 = tuple(map(int, input("Top-right: ").split(',')))
-    p3 = tuple(map(int, input("Bottom-right: ").split(',')))
-    p4 = tuple(map(int, input("Bottom-left: ").split(',')))
-    return p1, p2, p3, p4
-
-
 def main():
-    # Step 1: Capture the image from the camera
-    frame = capture_image()
+    camera = cv2.VideoCapture(0)  # Replace 0 with the appropriate camera index if necessary
 
-    # Step 2: Detect the QR code
-    qr_code = detect_qr_code(frame)
+    while True:
+        # Step 1: Capture a frame from the camera
+        frame = capture_frame(camera)
 
-    if qr_code:
-        # QR code detected
-        points = qr_code.polygon
-        if len(points) == 4:
-            src_points = np.array([(p.x, p.y) for p in points], dtype=np.float32)
+        # Step 2: Detect the Data Matrix
+        data_matrix = detect_data_matrix(frame)
 
-            # Calculate width and height of the QR code
+        if data_matrix:
+            # Data Matrix detected
+            points = data_matrix.rect
+            src_points = np.array([
+                [points[0][0], points[0][1]],
+                [points[1][0], points[1][1]],
+                [points[2][0], points[2][1]],
+                [points[3][0], points[3][1]]
+            ], dtype=np.float32)
+
+            # Calculate width and height of the Data Matrix
             width = int(
                 max(np.linalg.norm(src_points[0] - src_points[1]), np.linalg.norm(src_points[2] - src_points[3])))
             height = int(
@@ -90,36 +95,30 @@ def main():
 
             dst_points = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype=np.float32)
 
-            # Step 3: Apply homography to the QR code
-            rectified_qr_image = apply_homography(frame, src_points, dst_points)
+            # Step 3: Apply homography to the Data Matrix
+            rectified_data_matrix_image = apply_homography(frame, src_points, dst_points)
 
-            # Step 4: Decode the QR code from the rectified image
-            decoded_qr_code = detect_qr_code(rectified_qr_image)
-            if decoded_qr_code:
-                qr_data = decoded_qr_code.data.decode('utf-8')
+            # Step 4: Decode the Data Matrix from the rectified image
+            decoded_data_matrix = detect_data_matrix(rectified_data_matrix_image)
+            if decoded_data_matrix:
+                data = decoded_data_matrix.data.decode('utf-8')
                 # Step 5: Generate output file
-                generate_output_file(qr_data, rectified_qr_image)
+                generate_output_file(data, rectified_data_matrix_image)
             else:
-                print("Failed to decode the QR code from the rectified image")
+                print("Failed to decode the Data Matrix from the rectified image")
         else:
-            print("QR code is not a quadrilateral")
-    else:
-        # QR code not detected, apply homography to the entire screen
-        print("No QR code detected, applying homography to the screen")
-        p1, p2, p3, p4 = detect_screen_points()
-        screen_points = np.array([p1,p2, p3, p4],
-                                 dtype=np.float32)  # Replace with actual screen coordinates
-        screen_width = SCREEN_WIDTH  # Replace with actual screen width
-        screen_height = SCREEN_HEIGHT  # Replace with actual screen height
-        screen_dst_points = np.array([[0, 0], [screen_width, 0], [screen_width, screen_height], [0, screen_height]],
-                                     dtype=np.float32)
+            # Data Matrix not detected, apply homography to the entire screen
+            print("No Data Matrix detected in the current frame")
 
-        rectified_screen_image = apply_homography(frame, screen_points, screen_dst_points)
+        # Display the captured frame
+        cv2.imshow('Video Stream', frame)
 
-        # Optionally display the rectified screen image
-        cv2.imshow('Rectified Screen Image', rectified_screen_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # Break the loop on 'q' key press
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    camera.release()
+    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
