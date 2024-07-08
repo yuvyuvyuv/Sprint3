@@ -52,6 +52,12 @@ def draw_img(image_path, duration_ms, x, y, frame_width=10):
     # Start the Tkinter main loop
     window.mainloop()
 
+def generate_data_matrix_from_text(binary_data, output_file):
+    text_data = binary_data.encode('utf-8')
+    encoded = encode(text_data)
+    img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
+    img.save(output_file)
+    return output_file
 
 def generate_data_matrix(input_file, output_file):
     with open(input_file, 'rb') as file:
