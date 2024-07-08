@@ -2,6 +2,8 @@ import numpy as np
 import wave
 import struct
 
+# TODO: update locations!!
+
 # WANTED_LOCATION = "C:\\Users\\Public\\Documents\\top_secret"
 LOCATION_FOR_CHECK = "Sprint3"
 FILE_NAME = "check_hadar.txt"
@@ -14,5 +16,11 @@ WAV_FILE_PATH = f"{LOCATION_FOR_CHECK}\\{WAV_FILE_NAME}"
 
 # reading the txt file as binary
 def read_file_as_binary(file_path):
+    '''
+    This function reads a file as binary
+    :param file_path:
+    :return:  binary data
+    '''
     with open(file_path, "rb") as file:
         return file.read()
+
