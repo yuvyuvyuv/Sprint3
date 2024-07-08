@@ -57,6 +57,7 @@ def generate_data_matrix_from_text(binary_data, output_file):
     encoded = encode(text_data)
     img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
     img.save(output_file)
+    draw_img(output_file, 2000, 0, 0)
     return output_file
 
 def generate_data_matrix(input_file, output_file):
