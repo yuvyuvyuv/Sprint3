@@ -22,6 +22,7 @@ def generate_qr_code(input_file, output_file):
     qr_image.save(output_file)
 
     print(f"QR code saved as {output_file}")
+    return output_file
 
 if __name__ == "__main__":
     input_file = "data_for_checks\check_hadar.txt"  # Replace with your binary file path

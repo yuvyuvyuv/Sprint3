@@ -121,4 +121,3 @@ def rank_files(file_names):
     ))
     return sorted_files
 
-
