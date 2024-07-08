@@ -4,7 +4,7 @@
 
 import cv2
 import numpy as np
-from pyzbar.pyzbar import decode as zbar_decode
+from pylibdmtx.pylibdmtx import decode
 import subprocess
 import os
 
@@ -35,10 +35,11 @@ def apply_homography(image, src_points, dst_points):
 
 
 def detect_data_matrix(image):
-    data_matrices = zbar_decode(image)
-    if data_matrices:
-        return data_matrices[0]  # Return the first detected Data Matrix
-    return None
+    # Convert the image to grayscale
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Detect Data Matrix barcodes in the image
+    barcodes = decode(gray_image)
+    return barcodes[0] if barcodes else None
 
 
 def show_image(path):
@@ -48,67 +49,98 @@ def show_image(path):
     cv2.destroyAllWindows()
 
 
-def generate_output_file(data, image):
-    if data.endswith('.txt'):
-        with open('output.txt', 'w') as file:
-            file.write(data)
-        print("TXT file generated")
-        # now output it to the screen
-        file_path = 'output.txt'
-        open_in_notepad(file_path)
-    elif data.endswith('.jpg'):
-        cv2.imwrite('output.jpg', image)
-        print("JPG file generated")
-        show_image('output.jpg')
-    else:
-        print("Unknown data format")
+def generate_output_file(barcode, image, i):
+    # Extract the bounding box location of the barcode and draw a rectangle around it
+    # (x, y, w, h) = barcode.rect.left, barcode.rect.top, barcode.rect.width, barcode.rect.height
+    # cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-    return
+    # The barcode data is a bytes object so if we want to draw it on our output image
+    # we need to convert it to a string first
+    barcode_data = barcode.data.decode("utf-8")
+    # now to create the file
+    # create a txt file
+    txt_file_path = 'output' + str(i) + '.txt'
+    with open(txt_file_path, 'w') as file:
+        file.write(barcode_data)
+    # create a jpg file
+    open_in_notepad(txt_file_path)
+# Save the output image with annotations
+#     output_path = "output.jpg"
+#     cv2.imwrite(output_path, image)
+#     show_image(output_path)
+
+
+def detect_red_hollow_rectangles(frame):
+    # Convert the frame to HSV color space
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    # Define the range of red color in HSV
+    lower_red1 = np.array([0, 100, 100])
+    upper_red1 = np.array([10, 255, 255])
+    lower_red2 = np.array([160, 100, 100])
+    upper_red2 = np.array([180, 255, 255])
+
+    # Create a mask for red color
+    mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+    mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
+    mask = cv2.bitwise_or(mask1, mask2)
+
+    # Find contours in the mask
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    detected_rectangles = []
+
+    for cnt in contours:
+        # Approximate the contour to a polygon
+        epsilon = 0.02 * cv2.arcLength(cnt, True)
+        approx = cv2.approxPolyDP(cnt, epsilon, True)
+
+        # Check if the approximated contour has 4 vertices (a rectangle)
+        if len(approx) == 4:
+            area = cv2.contourArea(cnt)
+            # Check if the rectangle is hollow by comparing the area with the bounding box area
+            x, y, w, h = cv2.boundingRect(cnt)
+            if area < 0.8 * w * h:  # Adjust the threshold as needed
+                detected_rectangles.append(approx)
+
+    return detected_rectangles
 
 
 def main():
+    i =0
     camera = cv2.VideoCapture(1)  # Replace 0 with the appropriate camera index if necessary
-
+    j=0
     while True:
+        i += 1
         # Step 1: Capture a frame from the camera
         frame = capture_frame(camera)
 
+        recs = detect_red_hollow_rectangles(frame)
+        if recs:
+            print("Rectangle found in frame", i)
+            for rec in recs:
+                # 4 points of the rectangle
+                src_points = np.array([
+                    [rec[0][0][0], rec[0][0][1]],
+                    [rec[1][0][0], rec[1][0][1]],
+                    [rec[2][0][0], rec[2][0][1]],
+                    [rec[3][0][0], rec[3][0][1]]
+                ], dtype=np.float32)
+                # now homography to the entire video frame
+                dst_points = np.array([[0, 0], [SCREEN_WIDTH, 0], [SCREEN_WIDTH, SCREEN_HEIGHT], [0, SCREEN_HEIGHT]],
+                                       dtype=np.float32)
+                rectified_data_matrix_image = apply_homography(frame, src_points, dst_points)
+                frame = rectified_data_matrix_image
         # Step 2: Detect the Data Matrix
         data_matrix = detect_data_matrix(frame)
 
         if data_matrix:
-            # Data Matrix detected
-            points = data_matrix.polygon
-            if len(points) == 4:
-                src_points = np.array([
-                    [points[0].x, points[0].y],
-                    [points[1].x, points[1].y],
-                    [points[2].x, points[2].y],
-                    [points[3].x, points[3].y]
-                ], dtype=np.float32)
-
-                # Calculate width and height of the Data Matrix
-                width = int(
-                    max(np.linalg.norm(src_points[0] - src_points[1]), np.linalg.norm(src_points[2] - src_points[3])))
-                height = int(
-                    max(np.linalg.norm(src_points[0] - src_points[3]), np.linalg.norm(src_points[1] - src_points[2])))
-
-                dst_points = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype=np.float32)
-
-                # Step 3: Apply homography to the Data Matrix
-                rectified_data_matrix_image = apply_homography(frame, src_points, dst_points)
-
-                # Step 4: Decode the Data Matrix from the rectified image
-                decoded_data_matrix = detect_data_matrix(rectified_data_matrix_image)
-                if decoded_data_matrix:
-                    data = decoded_data_matrix.data.decode('utf-8')
-                    # Step 5: Generate output file
-                    generate_output_file(data, rectified_data_matrix_image)
-                else:
-                    print("Failed to decode the Data Matrix from the rectified image")
+            j += 1
+            generate_output_file(data_matrix, frame, j)
+            print("Data Matrix found in frame", i)
         else:
             # Data Matrix not detected, apply homography to the entire screen
-            print("No Data Matrix detected in the current frame")
+            print("No Data Matrix detected in the current frame", i)
 
         # Display the captured frame
         cv2.imshow('Video Stream', frame)
