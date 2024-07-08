@@ -42,6 +42,16 @@ def detect_data_matrix(image):
     return barcodes[0] if barcodes else None
 
 
+def detect_qr_code(frame):
+    # Initialize the QRCode detector
+    detector = cv2.QRCodeDetector()
+
+    # Detect and decode the QR code
+    data, bbox, _ = detector.detectAndDecode(frame)
+
+    return data, bbox
+
+
 def show_image(path):
     image = cv2.imread(path)
     cv2.imshow('Image', image)
@@ -49,19 +59,12 @@ def show_image(path):
     cv2.destroyAllWindows()
 
 
-def generate_output_file(barcode, image, i):
-    # Extract the bounding box location of the barcode and draw a rectangle around it
-    # (x, y, w, h) = barcode.rect.left, barcode.rect.top, barcode.rect.width, barcode.rect.height
-    # cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-    # The barcode data is a bytes object so if we want to draw it on our output image
-    # we need to convert it to a string first
-    barcode_data = barcode.data.decode("utf-8")
-    # now to create the file
-    # create a txt file
+def generate_output_file(data, frame, i):
+    # lets decode the qr code
+    data = data.decode("utf-8")
     txt_file_path = 'output' + str(i) + '.txt'
     with open(txt_file_path, 'w') as file:
-        file.write(barcode_data)
+        file.write(data)
     # create a jpg file
     open_in_notepad(txt_file_path)
 # Save the output image with annotations
@@ -100,7 +103,7 @@ def detect_red_hollow_rectangles(frame):
             area = cv2.contourArea(cnt)
             # Check if the rectangle is hollow by comparing the area with the bounding box area
             x, y, w, h = cv2.boundingRect(cnt)
-            if area < 0.8 * w * h:  # Adjust the threshold as needed
+            if 0.2 *w * h< area < 0.8 * w * h:  # Adjust the threshold as needed
                 detected_rectangles.append(approx)
 
     return detected_rectangles
@@ -114,27 +117,26 @@ def main():
         i += 1
         # Step 1: Capture a frame from the camera
         frame = capture_frame(camera)
-
-        recs = detect_red_hollow_rectangles(frame)
-        if recs:
-            print("Rectangle found in frame", i)
-            for rec in recs:
-                # 4 points of the rectangle
-                src_points = np.array([
-                    [rec[0][0][0], rec[0][0][1]],
-                    [rec[1][0][0], rec[1][0][1]],
-                    [rec[2][0][0], rec[2][0][1]],
-                    [rec[3][0][0], rec[3][0][1]]
-                ], dtype=np.float32)
-                # now homography to the entire video frame
-                dst_points = np.array([[0, 0], [SCREEN_WIDTH, 0], [SCREEN_WIDTH, SCREEN_HEIGHT], [0, SCREEN_HEIGHT]],
-                                       dtype=np.float32)
-                rectified_data_matrix_image = apply_homography(frame, src_points, dst_points)
-                frame = rectified_data_matrix_image
+        # detect wqr
+        data, bbox = detect_qr_code(frame)
+        print(f"bbox: {bbox}")
+        if bbox is not None:
+            rec = bbox[0]
+        data_matrix = None
+        # check if qr code is detected
+        if bbox is not None:
+            # we get the corners of the qr code, lets enlarge it
+            # src_points = np.array([[rec[0][0], rec[0][1]], [rec[1][0], rec[1][1]], [rec[2][0], rec[2][1]],
+            #                         [rec[3][0], rec[3][1]]], dtype=np.float32)
+            # # now homography to the entire video frame
+            # dst_points = np.array([[0, 0], [SCREEN_WIDTH, 0], [SCREEN_WIDTH, SCREEN_HEIGHT], [0, SCREEN_HEIGHT]],
+            #                        dtype=np.float32)
+            # rectified_data_matrix_image = apply_homography(frame, src_points, dst_points)
+            # frame = rectified_data_matrix_image
         # Step 2: Detect the Data Matrix
-        data_matrix = detect_data_matrix(frame)
-
-        if data_matrix:
+            data_matrix = detect_data_matrix(frame)
+        if data_matrix is not None:
+            # print(data_matrix, bbox)
             j += 1
             generate_output_file(data_matrix, frame, j)
             print("Data Matrix found in frame", i)

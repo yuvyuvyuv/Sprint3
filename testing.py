@@ -1,14 +1,19 @@
 import cv2
+import numpy as np
 
 
-def detect_qr_code(frame):
-    # Initialize the QRCode detector
-    detector = cv2.QRCodeDetector()
-
-    # Detect and decode the QR code
-    data, bbox, _ = detector.detectAndDecode(frame)
-
-    return data, bbox
+# def detect_qr_code(frame):
+#     # Initialize the QRCode detector
+#     detector = cv2.QRCodeDetector()
+#
+#     # Detect and decode the QR code
+#     data, bbox, _ = detector.detectAndDecode(frame)
+#
+#     # Print debug information
+#     print(f"Data: {data}")
+#     print(f"Bounding Box: {bbox}")
+#
+#     return data, bbox
 
 
 def main():
@@ -29,13 +34,16 @@ def main():
         data, bbox = detect_qr_code(frame)
 
         # If a QR code is detected
-        if bbox is not None:
+        if bbox is not None and data:
             # Draw bounding box around the QR code
-            bbox = bbox.astype(int)
-            for i in range(len(bbox)):
-                cv2.line(frame, tuple(bbox[i][0]), tuple(bbox[(i + 1) % len(bbox)][0]), color=(0, 255, 0), thickness=2)
+            bbox = np.int32(bbox)
+            for i in range(len(bbox[0])):
+                cv2.line(frame, tuple(bbox[0][i]), tuple(bbox[0][(i + 1) % len(bbox[0])]), color=(0, 255, 0),
+                         thickness=2)
             # Display the decoded data
             cv2.putText(frame, data, (bbox[0][0][0], bbox[0][0][1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            # Print the decoded data to the console
+            print("QR Code Data:", data)
 
         # Display the resulting frame
         cv2.imshow('Frame', frame)
