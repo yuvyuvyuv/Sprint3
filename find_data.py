@@ -9,7 +9,7 @@ from bytes_to_code import generate_qr_code
 
 DIR_PATH = "C:\\Users\\Public\\Documents\\top_secret"
 IMG_PATH = "C:\\Users\\Public\\Documents\\top_secret\\top_image.jpg"
-DIR_PATH = "C:\\Users\\TLP-001\\OneDrive - click\\Documents\\sprints\\sprint3-update\\Sprint3"
+DIR_PATH = "C:\\Users\\TLP-001\\Desktop\\Talpiot\\Sprint3\\data_for_checks"
 HEBREW_WORDS_PATH = "data_for_checks/hebrew_words.pkl"
 # nltk.download("words")
 
@@ -125,6 +125,8 @@ def rank_files(file_names):
 
 
 def file_to_barcodes(file_path, file_number):
+    file_path = os.path.join(DIR_PATH, file_path)
+    print(file_path)
     with open(file_path, 'r', encoding='utf-8') as file:
         text = file.read()
         # split text into chunks of 100 characters
@@ -132,7 +134,7 @@ def file_to_barcodes(file_path, file_number):
         chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
         # generate QR codes for each chunk
         qr_codes = []
-        start_barcode = generate_qr_code("data_for_checks\start.txt", "start_barcode.png")
+        start_barcode = generate_qr_code("data_for_checks\start_file.txt", "start_barcode.png")
         qr_codes.append(start_barcode)
         for i, chunk in enumerate(chunks):
             output_file = f"qr_code_{file_number}_{i}.png"
@@ -151,3 +153,7 @@ def all_files_to_barcodes(file_paths):
     for i, file_path in enumerate(file_paths):
         all_qr_codes.extend(file_to_barcodes(file_path[0], i))
     return all_qr_codes
+
+file_names = [file[0] for file in rank_files(list_files_in_directory()) if file[1].file_format == ".txt"]
+print(file_names)
+all_files_to_barcodes(file_names)
