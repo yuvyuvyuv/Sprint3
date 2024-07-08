@@ -35,9 +35,9 @@ def generate_qr_code(input_file, output_file):
     print(f"QR code saved as {output_file}")
     return output_file
 
-def generate_qr_code_from_text(text, output_file):
+def generate_qr_code_from_text(binary_data, output_file):
 
-    binary_data = text.encode('utf-8')
+    text_data = binary_data.encode('utf-8')
     # Generate QR code
     qr = qrcode.QRCode(
         version=1,
@@ -45,7 +45,7 @@ def generate_qr_code_from_text(text, output_file):
         box_size=10,
         border=4,
     )
-    qr.add_data(binary_data)
+    qr.add_data(text_data)
     qr.make(fit=True)
 
     # Create QR code image
