@@ -54,8 +54,9 @@ if __name__ == "__main__":
     metadata = define_metadata(img)
     binary_data = convert_image_to_binary(img)
     modulated_data = modulation(binary_data)
-    wav_file_path = wav_file_stuff.create_wav_file_img(modulated_data)
-    final_script.send_accoustic_signal(wav_file_path)
+    # wav_file_path = wav_file_stuff.create_wav_file_img(modulated_data)
+    # final_script.send_accoustic_signal(wav_file_path)
+    final_script.send_accoustic_signal_from_data(modulated_data)
 
 
 

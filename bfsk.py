@@ -35,9 +35,6 @@ def signal_to_data(signal):
 
     return demodulated_signal
 
-
-
-sd.play(data_to_signal(binary_data), Fs)
-
+sd.play(generate_bfsk_signal(binary_data, f0, f1, Fs, T, A), Fs)
 # Wait until the audio is done playing
 sd.wait()

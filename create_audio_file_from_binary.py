@@ -21,6 +21,7 @@ def read_file_as_binary(file_path):
     :param file_path:
     :return:  binary data
     '''
-    with open(file_path, "rb") as file:
+    print(f"Reading file as binary: {file_path}")
+    with open(file_path[0], "rb") as file:
         return file.read()
 
