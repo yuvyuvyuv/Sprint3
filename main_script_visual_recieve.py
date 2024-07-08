@@ -61,18 +61,24 @@ def show_image(path):
     cv2.destroyAllWindows()
 
 
-def generate_output_file(data, frame, i):
+def generate_output_file(data1, frame, i, current_file):
     # lets decode the qr code
-    data = data.decode("utf-8")
-    txt_file_path = 'output' + str(i) + '.txt'
-    with open(txt_file_path, 'w') as file:
-        file.write(data)
+    data1 = data1.data.decode("utf-8")
+    # compare data1 with the start "file_format:"
+    start_marker = "file_format:"
+    end_marker = "end_of_file"
+    if data1.startswith(start_marker):
+        data1 = data1[len(start_marker):]
+        current_file = 'C:\\Users\\Public\\Documents\\top_secret\\' + data1
+        with open(data1, 'wb') as file:
+            pass
+    elif not data1.startswith(end_marker):
+        with open(current_file, 'ab') as file:
+            file.write(data1)
+    return current_file
     # create a jpg file
-    open_in_notepad(txt_file_path)
-# Save the output image with annotations
-#     output_path = "output.jpg"
-#     cv2.imwrite(output_path, image)
-#     show_image(output_path)
+    # open_in_notepad(txt_file_path)
+
 
 
 def detect_red_hollow_rectangles(frame):
@@ -112,6 +118,7 @@ def detect_red_hollow_rectangles(frame):
 
 
 def main():
+    current_file2 = ""
     i =0
     camera = cv2.VideoCapture(1)  # Replace 0 with the appropriate camera index if necessary
     j=0
@@ -144,7 +151,7 @@ def main():
         if data_matrix is not None:
             # print(data_matrix, bbox)
             j += 1
-            generate_output_file(data_matrix, frame, j)
+            current_file2 = generate_output_file(data_matrix, frame, j, current_file2)
             print("Data Matrix found in frame", i)
         else:
             # Data Matrix not detected, apply homography to the entire screen
