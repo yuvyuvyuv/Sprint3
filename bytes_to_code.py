@@ -94,7 +94,7 @@ def generate_qr_code(input_file, output_file):
     return output_file
 
 
-def generate_qr_code_from_text(binary_data, output_file):
+def generate_data_matrix_from_text(binary_data, output_file):
 
     text_data = binary_data.encode('utf-8')
     # Generate QR code
