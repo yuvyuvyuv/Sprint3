@@ -3,6 +3,7 @@
 import create_audio_file_from_binary
 import find_data
 import wav_file_stuff
+import find_data
 
 
 def use_modulation(binary_data):
@@ -10,7 +11,7 @@ def use_modulation(binary_data):
     # TODO: use yogev function here
 
 def get_all_paths():
-    paths_in_order = []
+    paths_in_order = find_data.rank_files(find_data.list_files_in_directory())
     # TODO: add eithen's function here
     return paths_in_order
 

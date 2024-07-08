@@ -6,6 +6,7 @@ import string
 import pickle
 
 DIR_PATH = "C:\\Users\\Public\\Documents\\top_secret"
+IMG_PATH = "C:\\Users\\Public\\Documents\\top_secret\\top_image.jpg"
 DIR_PATH = "C:\\Users\\TLP-001\\Desktop\\Talpiot\\Sprint3"
 HEBREW_WORDS_PATH = "C:\\Users\\TLP-001\\Desktop\\Talpiot\\Sprint3\\hebrew_words.pkl"
 # nltk.download("words")
@@ -84,7 +85,8 @@ class FileMetadata:
         self.access_time = datetime.datetime.fromtimestamp(os.path.getatime(file_path))
 
 
-def list_files_in_directory(dir_path):
+def list_files_in_directory():
+    dir_path = DIR_PATH
     try:
         file_names = os.listdir(dir_path)
         return file_names
@@ -120,4 +122,3 @@ def rank_files(file_names):
     return sorted_files
 
 
-print(rank_files(list_files_in_directory(DIR_PATH)))
