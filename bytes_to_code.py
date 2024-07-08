@@ -4,6 +4,15 @@ from PIL import Image
 import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
 
+def scale_image(image_path, scale_factor):
+    # Open an image file
+    image = Image.open(image_path)
+    # Calculate the new size
+    new_size = (int(image.width * scale_factor), int(image.height * scale_factor))
+    # Resize the image
+    resized_image = image.resize(new_size)
+    return resized_image
+
 
 def add_red_frame(image, frame_width=10):
     # Calculate the size of the new image with the frame
@@ -21,7 +30,7 @@ def add_red_frame(image, frame_width=10):
 
 def draw_img(image_path, duration_ms, x, y, frame_width=10):
     # Load the image using PIL
-    image = Image.open(image_path)
+    image = scale_image(image_path, 3)
 
     # Add a red frame around the image
     framed_image = add_red_frame(image, frame_width)
@@ -29,6 +38,7 @@ def draw_img(image_path, duration_ms, x, y, frame_width=10):
     # Create a Tkinter window
     window = tk.Tk()
     window.attributes("-topmost", True)
+    window.attributes("-fullscreen", True)
     window.title("Image Display")
 
     # Convert the framed image to a format Tkinter can use
@@ -57,7 +67,7 @@ def generate_data_matrix_from_text(binary_data, output_file):
     encoded = encode(text_data)
     img = Image.frombytes('RGB', (encoded.width, encoded.height), encoded.pixels)
     img.save(output_file)
-    draw_img(output_file, 2000, 0, 0)
+    draw_img(output_file, 6000, 0, 0)
     return output_file
 
 def generate_data_matrix(input_file, output_file):
@@ -94,7 +104,7 @@ def generate_qr_code(input_file, output_file):
     return output_file
 
 
-def generate_data_matrix_from_text(binary_data, output_file):
+def generate_qr_data_from_text(binary_data, output_file):
 
     text_data = binary_data.encode('utf-8')
     # Generate QR code

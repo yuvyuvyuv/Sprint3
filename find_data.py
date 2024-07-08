@@ -134,7 +134,7 @@ def file_to_barcodes(file_path, file_number):
         # split text into chunks of 100 characters
 
         chunks = []
-        chunk_size = 100
+        chunk_size = 20
         for i in range(0, len(text), chunk_size):
             chunk = text[i:i + chunk_size]
             chunks.append(chunk)
