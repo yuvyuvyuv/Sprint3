@@ -1,3 +1,6 @@
 numpy~=1.26.2
 nltk~=3.8.1
 PyAudio~=0.2.14
+
+matplotlib~=3.8.2
+sounddevice~=0.4.7
