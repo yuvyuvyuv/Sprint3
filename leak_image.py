@@ -2,13 +2,7 @@
 # accoustically send and receive
 
 # this module will contain functions for finding a greyscale image, and converting it to binary data
-import os
-import numpy as np
 import cv2
-import wave
-import struct
-import pyaudio  # for playing the wav file
-import wav_file_stuff
 import final_script
 
 PATH = "C:\\Users\\Public\\Documents\\top_secret\\top_image.jpg"

@@ -1,12 +1,9 @@
 # this is the final script that will be used to run the entire project
 # it should be a hidden file on a disk on key that will run directly from the disk
 # on key after clicked on when connected to a computer
-import create_audio_file_from_binary
 import find_data
-import wav_file_stuff
-import bfsk
+from trash import bfsk, create_audio_file_from_binary
 import sounddevice as sd
-from nltk.corpus import words
 import nltk
 
 Fs = 44000  # Sampling frequency (Hz)

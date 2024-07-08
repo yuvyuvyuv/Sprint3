@@ -9,7 +9,7 @@ import pyaudio # for playing the wav file
 
 # WANTED_LOCATION = "C:\\Users\\Public\\Documents\\top_secret"
 LOCATION_FOR_CHECK = "Sprint3"
-FILE_NAME = "check_hadar.txt"
+FILE_NAME = "../check_hadar.txt"
 WAV_FILE_NAME = "check_hadar.wav"
 WAV_FILE_NAME2 = "check_hadar.wav"
 WAV_FILE_PATH = f"{LOCATION_FOR_CHECK}\\{WAV_FILE_NAME}"
