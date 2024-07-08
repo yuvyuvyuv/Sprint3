@@ -11,16 +11,16 @@ A = 1       # Amplitude of the signal
 
 # Binary sequence (example)
 binary_data = np.random.randint(0, 2, int(T * Fs))
-print(binary_data)
-def data_to_signal(binary_data):
-    # BFSK modulation
-    modulated_signal = np.zeros(len(t))
-    for i, bit in enumerate(binary_data): 
+
+def generate_bfsk_signal(data, f0, f1, fs, T, amplitude):
+    t = np.arange(0, T, 1/fs)
+    signal = np.array([])
+    for bit in data:
         if bit == 0:
-            modulated_signal[i] = A * np.sin(2 * np.pi * f0 * t[i])
+            signal = np.concatenate((signal, amplitude * np.sin(2 * np.pi * f0 * t)))
         else:
-            modulated_signal[i] = A * np.sin(2 * np.pi * f1 * t[i])
-    return modulated_signal
+            signal = np.concatenate((signal, amplitude * np.sin(2 * np.pi * f1 * t)))
+    return signal
 
 def signal_to_data(signal):
     # BFSK demodulation
