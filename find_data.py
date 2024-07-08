@@ -8,11 +8,11 @@ import pickle
 DIR_PATH = "C:\\Users\\Public\\Documents\\top_secret"
 IMG_PATH = "C:\\Users\\Public\\Documents\\top_secret\\top_image.jpg"
 DIR_PATH = "C:\\Users\\TLP-001\\OneDrive - click\\Documents\\sprints\\sprint3-update\\Sprint3"
-HEBREW_WORDS_PATH = "hebrew_words.pkl"
+HEBREW_WORDS_PATH = "data_for_checks/hebrew_words.pkl"
 # nltk.download("words")
 
 # Load Hebrew words from pkl file
-with open("hebrew_words.pkl", "rb") as f:
+with open("data_for_checks/hebrew_words.pkl", "rb") as f:
     hebrew_words = pickle.load(f)
 
 
