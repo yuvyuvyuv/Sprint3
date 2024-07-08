@@ -126,8 +126,10 @@ def rank_files(file_names):
 
 def file_to_barcodes(file_path, file_number):
     file_path = os.path.join(DIR_PATH, file_path)
-    with open(file_path, 'r', encoding='utf-8') as file:
+    file_format = os.path.splitext(file_path)[1]
+    with open(file_path, 'rb') as file:
         text = file.read()
+        text = text.decode('latin1')
         # split text into chunks of 100 characters
 
         chunks = []
@@ -136,32 +138,35 @@ def file_to_barcodes(file_path, file_number):
             chunk = text[i:i + chunk_size]
             chunks.append(chunk)
 
-
         # generate QR codes for each chunk
         qr_codes = []
-        start_barcode = generate_qr_code("data_for_checks\start_file.txt", "start_barcode.png")
+        start_file = "file_format:"+file_format+"end"
+        start_barcode = generate_qr_code_from_text(start_file, f"start_barcode{file_number}.png")
         qr_codes.append(start_barcode)
         for i, chunk in enumerate(chunks):
             output_file = f"qr_code_{file_number}_{i}.png"
-            print(type(chunk))
-            print("chunk sent to generate qr code is "+chunk)
             image_path = generate_qr_code_from_text(chunk, output_file)
-
             # convert data type to png
             qr_codes.append(image_path)
-        end_barcode = generate_qr_code("data_for_checks\end_file.txt", "end_barcode.png")
+        end_barcode = generate_qr_code_from_text("end_of_file", f"end_barcode{file_number}.png")
         qr_codes.append(end_barcode)
         return qr_codes
+
+
+def file_names_sorted():
+    file_names = list_files_in_directory()
+    sorted_files = rank_files(file_names)
+    file_names_final = [file[0] for file in sorted_files]
+    print(file_names_final)
+    return file_names_final
 
 
 def all_files_to_barcodes(file_paths):
     all_qr_codes = []
     for i, file_path in enumerate(file_paths):
-        print("file sent to file to barcode is "+file_path)
         all_qr_codes.extend(file_to_barcodes(file_path, i))
     return all_qr_codes
 
-file_names = [file[0] for file in rank_files(list_files_in_directory()) if file[1].file_format == ".txt"]
-print(file_names)
-all_files_to_barcodes(file_names)
 
+if __name__ == '__main__':
+    all_barcodes = all_files_to_barcodes(file_names_sorted())
