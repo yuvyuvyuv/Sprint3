@@ -5,7 +5,7 @@ from nltk.corpus import words
 import string
 import pickle
 
-from bytes_to_code import generate_qr_code, generate_qr_code_from_text
+from bytes_to_code import generate_qr_code, generate_data_matrix_from_text
 
 DIR_PATH = "C:\\Users\\Public\\Documents\\top_secret"
 IMG_PATH = "C:\\Users\\Public\\Documents\\top_secret\\top_image.jpg"
@@ -125,6 +125,7 @@ def rank_files(file_names):
 
 
 def file_to_barcodes(file_path, file_number):
+    file_name = file_path
     file_path = os.path.join(DIR_PATH, file_path)
     file_format = os.path.splitext(file_path)[1]
     with open(file_path, 'rb') as file:
@@ -140,15 +141,15 @@ def file_to_barcodes(file_path, file_number):
 
         # generate QR codes for each chunk
         qr_codes = []
-        start_file = "file_format:"+file_format+"end"
-        start_barcode = generate_qr_code_from_text(start_file, f"start_barcode{file_number}.png")
+        start_file ="file_format:"+file_name
+        start_barcode = generate_data_matrix_from_text(start_file, f"start_barcode{file_number}.png")
         qr_codes.append(start_barcode)
         for i, chunk in enumerate(chunks):
             output_file = f"qr_code_{file_number}_{i}.png"
-            image_path = generate_qr_code_from_text(chunk, output_file)
+            image_path = generate_data_matrix_from_text(chunk, output_file)
             # convert data type to png
             qr_codes.append(image_path)
-        end_barcode = generate_qr_code_from_text("end_of_file", f"end_barcode{file_number}.png")
+        end_barcode = generate_data_matrix_from_text("end_of_file", f"end_barcode{file_number}.png")
         qr_codes.append(end_barcode)
         return qr_codes
 
